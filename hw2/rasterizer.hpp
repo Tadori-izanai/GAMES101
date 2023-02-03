@@ -68,20 +68,22 @@ namespace rst
 
         void set_pixel(const Eigen::Vector3f& point, const Eigen::Vector3f& color);
 
-        void clear(Buffers buff);
+        virtual void clear(Buffers buff);
 
         void draw(pos_buf_id pos_buffer, ind_buf_id ind_buffer, col_buf_id col_buffer, Primitive type);
 
-        std::vector<Eigen::Vector3f>& frame_buffer() { return frame_buf; }
+        virtual std::vector<Eigen::Vector3f>& frame_buffer() { return frame_buf; }
 
-    private:
+//    private:
+    protected:
         void draw_line(Eigen::Vector3f begin, Eigen::Vector3f end);
 
-        void rasterize_triangle(const Triangle& t);
+        virtual void rasterize_triangle(const Triangle& t);
 
         // VERTEX SHADER -> MVP -> Clipping -> /.W -> VIEWPORT -> DRAWLINE/DRAWTRI -> FRAGSHADER
 
-    private:
+//    private:
+    protected:
         Eigen::Matrix4f model;
         Eigen::Matrix4f view;
         Eigen::Matrix4f projection;

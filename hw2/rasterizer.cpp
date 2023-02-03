@@ -14,7 +14,6 @@
         (B) OPERATOR (C) ? (B) : (C) \
     )\
 )
-#define ANTIALIAS
 
 rst::pos_buf_id rst::rasterizer::load_positions(const std::vector<Eigen::Vector3f> &positions)
 {
@@ -46,7 +45,7 @@ auto to_vec4(const Eigen::Vector3f& v3, float w = 1.0f)
 }
 
 
-static bool insideTriangle(float x, float y, const Vector3f* _v)
+bool insideTriangle(float x, float y, const Vector3f* _v)
 {
     Eigen::Vector3f A(_v[0]);
     Eigen::Vector3f B(_v[1]);
@@ -61,7 +60,7 @@ static bool insideTriangle(float x, float y, const Vector3f* _v)
     return (z0 * z1 > 0 && z1 * z2 > 0 && z2 * z0 > 0);
 }
 
-static std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
+std::tuple<float, float, float> computeBarycentric2D(float x, float y, const Vector3f* v)
 {
     float c1 = (x*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*y + v[1].x()*v[2].y() - v[2].x()*v[1].y()) / (v[0].x()*(v[1].y() - v[2].y()) + (v[2].x() - v[1].x())*v[0].y() + v[1].x()*v[2].y() - v[2].x()*v[1].y());
     float c2 = (x*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*y + v[2].x()*v[0].y() - v[0].x()*v[2].y()) / (v[1].x()*(v[2].y() - v[0].y()) + (v[0].x() - v[2].x())*v[1].y() + v[2].x()*v[0].y() - v[0].x()*v[2].y());

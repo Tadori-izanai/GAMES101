@@ -2,6 +2,7 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include "rasterizer.hpp"
+#include "MSAARasterizer.h"
 #include "global.hpp"
 #include "Triangle.hpp"
 
@@ -69,7 +70,8 @@ int main(int argc, const char** argv)
         filename = std::string(argv[1]);
     }
 
-    rst::rasterizer r(700, 700);
+//    rst::rasterizer r(700, 700);
+    rst::MSAARasterizer r(700, 700);
 
     Eigen::Vector3f eye_pos = {0,0,5};
 
