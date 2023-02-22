@@ -7,6 +7,12 @@
 #include <opencv2/opencv.hpp>
 #include <math.h>
 
+#define MINMAX_AMONG_THREE(A, B, C, OPERATOR) ( \
+    (A) OPERATOR (B) && (A) OPERATOR (C) ? (A) : ( \
+        (B) OPERATOR (C) ? (B) : (C) \
+    )\
+)
+
 
 rst::pos_buf_id rst::rasterizer::load_positions(const std::vector<Eigen::Vector3f> &positions)
 {
@@ -260,6 +266,18 @@ static Eigen::Vector2f interpolate(float alpha, float beta, float gamma, const E
 void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eigen::Vector3f, 3>& view_pos) 
 {
     // TODO: From your HW3, get the triangle rasterization code.
+
+    auto v = t.toVector4();
+
+    Eigen::Vector4f A(t.v[0]);
+    Eigen::Vector4f B(t.v[1]);
+    Eigen::Vector4f C(t.v[2]);
+    float min_x = MINMAX_AMONG_THREE(A.x(), B.x(), C.x(), <);
+    float max_x = MINMAX_AMONG_THREE(A.x(), B.x(), C.x(), >);
+    float min_y = MINMAX_AMONG_THREE(A.y(), B.y(), C.y(), <);
+    float max_y = MINMAX_AMONG_THREE(A.y(), B.y(), C.y(), >);
+
+
     // TODO: Inside your rasterization loop:
     //    * v[i].w() is the vertex view space depth value z.
     //    * Z is interpolated view space depth for the current pixel
@@ -280,7 +298,36 @@ void rst::rasterizer::rasterize_triangle(const Triangle& t, const std::array<Eig
     // Use: Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get the final color;
     // Use: auto pixel_color = fragment_shader(payload);
 
- 
+    for (int i = (int)min_x; i <= (int)max_x; i++) {
+        for (int j = (int)min_y; j <= (int)max_y; j++) {
+            float x = (float) i + .5f;
+            float y = (float) j + .5f;
+
+            if (insideTriangle(x, y, t.v)) {
+                auto[alpha, beta, gamma] = computeBarycentric2D(x, y, t.v);
+//                float w_reciprocal = 1.0f/(alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+//                float z_interpolated = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+//                z_interpolated *= w_reciprocal;
+                float Z = 1.0f / (alpha / v[0].w() + beta / v[1].w() + gamma / v[2].w());
+                float zp = alpha * v[0].z() / v[0].w() + beta * v[1].z() / v[1].w() + gamma * v[2].z() / v[2].w();
+                zp *= Z;
+
+                if (zp < depth_buf[get_index(i, j)]) {
+                    depth_buf[get_index(i, j)] = zp;
+                    auto interpolated_color = interpolate(alpha, beta, gamma, t.color[0], t.color[1], t.color[2], 1.0);
+                    auto interpolated_normal = interpolate(alpha, beta, gamma, t.normal[0], t.normal[1], t.normal[2], 1.0f);
+                    auto interpolated_texcoords = interpolate(alpha, beta, gamma, t.tex_coords[0], t.tex_coords[1], t.tex_coords[2], 1.0f);
+                    auto interpolated_shadingcoords = interpolate(alpha, beta, gamma, view_pos[0], view_pos[1], view_pos[2], 1.0f);
+
+                    fragment_shader_payload payload( interpolated_color, interpolated_normal.normalized(), interpolated_texcoords, texture ? &*texture : nullptr);
+                    payload.view_pos = interpolated_shadingcoords;
+                    // Instead of passing the triangle's color directly to the frame buffer, pass the color to the shaders first to get the final color;
+                    auto pixel_color = fragment_shader(payload);
+                    set_pixel(Eigen::Vector2i(i, j), pixel_color);
+                }
+            }
+        }
+    }
 }
 
 void rst::rasterizer::set_model(const Eigen::Matrix4f& m)
