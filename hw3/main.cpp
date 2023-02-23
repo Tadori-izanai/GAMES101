@@ -364,11 +364,11 @@ int main(int argc, const char** argv)
     std::string filename = "output.png";
     objl::Loader Loader;
 //    std::string obj_path = "../models/spot/";
-    std::string obj_path = "../models/cube/";
+    std::string obj_path = "../models/Crate/";
 
     // Load .obj File
 //    bool loadout = Loader.LoadFile("../models/spot/spot_triangulated_good.obj");
-    bool loadout = Loader.LoadFile("../models/cube/cube.obj");
+    bool loadout = Loader.LoadFile("../models/Crate/Crate2.obj");
 
     if (loadout) {
         std::cout << "loaded\n";
@@ -392,7 +392,7 @@ int main(int argc, const char** argv)
     rst::rasterizer r(700, 700);
 
 //    auto texture_path = "hmap.jpg";
-    auto texture_path = "wall.tif";
+    auto texture_path = "crate_1.jpg";
     r.set_texture(Texture(obj_path + texture_path));
 
     std::function<Eigen::Vector3f(fragment_shader_payload)> active_shader = phong_fragment_shader;
@@ -408,7 +408,7 @@ int main(int argc, const char** argv)
             active_shader = texture_fragment_shader;
 //            texture_path = "spot_texture.png";
 //            texture_path = "spot_texture.svg";
-            texture_path = "wall.tif";
+            texture_path = "crate_1.jpg";
             r.set_texture(Texture(obj_path + texture_path));
         }
         else if (argc == 3 && std::string(argv[2]) == "normal")
@@ -458,6 +458,7 @@ int main(int argc, const char** argv)
         return 0;
     }
 
+    int count = 0;
     while(key != 27)
     {
         r.clear(rst::Buffers::Color | rst::Buffers::Depth);
@@ -478,13 +479,15 @@ int main(int argc, const char** argv)
 
         if (key == 'a' )
         {
-            angle -= 0.1;
+//            angle -= 0.1;
+            angle -= 10;
         }
         else if (key == 'd')
         {
-            angle += 0.1;
+//            angle += 0.1;
+            angle += 10;
         }
-
+        std::cout << "frame: " << count++ << std::endl;
     }
     return 0;
 }
