@@ -125,7 +125,7 @@ void msaa_bezier(const std::vector<cv::Point2f> &control_points, cv::Mat &window
     }
 }
 
-int main() 
+int main()
 {
     cv::Mat window = cv::Mat(700, 700, CV_8UC3, cv::Scalar(0));
     cv::cvtColor(window, window, cv::COLOR_BGR2RGB);
