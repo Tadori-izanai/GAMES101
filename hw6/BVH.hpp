@@ -38,7 +38,8 @@ public:
     BVHBuildNode* root;
 
     // BVHAccel Private Methods
-    BVHBuildNode* recursiveBuild(std::vector<Object*>objects);
+//    BVHBuildNode* recursiveBuild(std::vector<Object*>objects);
+    BVHBuildNode* recursiveBuild(std::vector<Object*>objects, int f(const std::vector<Object *> &objects));
 
     // BVHAccel Private Data
     const int maxPrimsInNode;
@@ -61,8 +62,6 @@ public:
         object = nullptr;
     }
 };
-
-
 
 
 #endif //RAYTRACING_BVH_H
