@@ -89,6 +89,15 @@ class Bounds3
 };
 
 
+inline static float compareTwice(float f1, float f2, float f3, float f(float, float)) {
+    return f(f1, f(f2, f3));
+}
+inline static float maxElement(const Vector3f &v) {
+    return compareTwice(v.x, v.y, v.z, fmax);
+}
+inline static float minElement(const Vector3f &v) {
+    return compareTwice(v.x, v.y, v.z, fmin);
+}
 
 inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
                                 const std::array<int, 3>& dirIsNeg) const
@@ -97,6 +106,16 @@ inline bool Bounds3::IntersectP(const Ray& ray, const Vector3f& invDir,
     // dirIsNeg: ray direction(x,y,z), dirIsNeg=[int(x>0),int(y>0),int(z>0)], use this to simplify your logic
     // TODO test if ray bound intersects
 
+    Vector3f o = ray.origin;
+
+    Vector3f t1 = (pMin - o) * invDir;
+    Vector3f t2 = (pMax - o) * invDir;
+    Vector3f tMin = Vector3f::Min(t1, t2);
+    Vector3f tMax = Vector3f::Max(t1, t2);
+    float tEnter = maxElement(tMin);
+    float tExit = minElement(tMax);
+
+    return (tEnter <= tExit && tExit > EPSILON);
 }
 
 inline Bounds3 Union(const Bounds3& b1, const Bounds3& b2)
