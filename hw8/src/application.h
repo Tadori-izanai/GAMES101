@@ -27,7 +27,8 @@ struct AppConfig {
 
     // Environment variables
     gravity = Vector2D(0, -1);
-    steps_per_frame = 64;
+//    steps_per_frame = 64;
+    steps_per_frame = 8192;
   }
 
   float mass;
