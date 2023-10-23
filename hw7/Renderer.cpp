@@ -26,6 +26,8 @@ void Renderer::Render(const Scene& scene)
     // change the spp value to change sample ammount
     int spp = 32;
     std::cout << "SPP: " << spp << "\n";
+
+#pragma omp parallel for shared(scene, imageAspectRatio, scale, spp, framebuffer, m, eye_pos) default(none)
     for (uint32_t j = 0; j < scene.height; ++j) {
         for (uint32_t i = 0; i < scene.width; ++i) {
             // generate primary ray direction
@@ -34,14 +36,18 @@ void Renderer::Render(const Scene& scene)
             float y = (1 - 2 * (j + 0.5) / (float)scene.height) * scale;
 
             Vector3f dir = normalize(Vector3f(-x, y, 1));
-            for (int k = 0; k < spp; k++){
-                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;  
+            for (int k = 0; k < spp; k++) {
+//                framebuffer[m] += scene.castRay(Ray(eye_pos, dir), 0) / spp;
+                framebuffer[j * scene.width + i] += scene.castRay(Ray(eye_pos, dir), 0) / float(spp);
             }
             m++;
+            if (m % 10000 == 0) {
+                printf("done with %d / %d\n", m, scene.width * scene.height);
+            }
         }
-        UpdateProgress(j / (float)scene.height);
+//        UpdateProgress(j / (float)scene.height);
     }
-    UpdateProgress(1.f);
+//    UpdateProgress(1.f);
 
     // save framebuffer to file
     FILE* fp = fopen("binary.ppm", "wb");

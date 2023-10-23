@@ -74,10 +74,11 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
 
     // check whether the intersection is on the light
     if (m->hasEmission()) {
-        return {1.f};
+        return m->getEmission();
     }
 
-    /* Contribute from the light source, directL */
+    float eps = 5e-4;
+    /* Contribution from the light source, directL */
     Vector3f directL(0.f);
     Intersection interLight;
     float pdfLight;
@@ -95,22 +96,30 @@ Vector3f Scene::castRay(const Ray &ray, int depth) const
         Vector3f emit = interS.m->getEmission();
         Vector3f fr = m->eval(omegaS, omegaO, N);
         float d = (x - p).norm();
-        directL += emit * fr * dotProduct(omegaS, N) * dotProduct(-omegaS, NN) / (d * d) / pdfLight;
+
+        float c1 = std::max(dotProduct(omegaS, N), 0.f);
+        float c2 = std::max(dotProduct(-omegaS, NN), 0.f);
+        directL += emit * fr * c1 * c2 / (d * d) / pdfLight;
     }
 
     /* Contribute from other reflection, lIndirect */
     Vector3f indirectL(0.f);
     // test Russian Roulette with probability RussianRoulette
     if (get_random_float() < RussianRoulette) {
-        Vector3f omegaI = m->sample(omegaO, N);
+        Vector3f omegaI = (m->sample(omegaO, N)).normalized();
 
-        // check whether the ray r hit a non-emitting object q
-        Ray r(p, omegaI);
-        Intersection interI = intersect(r);
-        if (interI.happened && !interI.m->hasEmission()) {
-            Vector3f fr = m->eval(omegaI, omegaO, N);
-            float pdfQ = m->pdf(omegaI, omegaO, N);
-            indirectL += castRay(r, depth) * fr * dotProduct(omegaI, N) / pdfQ / RussianRoulette;
+        float pdfQ = m->pdf(omegaO, omegaI, N);
+        if (pdfQ > eps) {
+            // check whether the ray r hit a non-emitting object q
+            Ray r(p, omegaI);
+            Intersection interI = intersect(r);
+
+            if (interI.happened && !interI.m->hasEmission()) {
+                Vector3f fr = m->eval(omegaI, omegaO, N);
+
+                float c = std::max(dotProduct(omegaI, N), 0.f);
+                indirectL += castRay(r, depth) * fr * c / pdfQ / RussianRoulette;
+            }
         }
     }
 
